@@ -13,12 +13,12 @@ func TestFutureTyped(t *testing.T) {
 	ctx := context.Background()
 
 	a, b, c, d, e, f, err := future.Resolve6(
-		future.Await(ctx, func(ctx context.Context) (int8, error) { return 1, nil }),
-		future.Await(ctx, func(ctx context.Context) (uint8, error) { return 1, nil }),
-		future.Await(ctx, func(ctx context.Context) (int16, error) { return 1, nil }),
-		future.Await(ctx, func(ctx context.Context) (uint16, error) { return 1, nil }),
-		future.Await(ctx, func(ctx context.Context) (int32, error) { return 1, nil }),
-		future.Await(ctx, func(ctx context.Context) (uint32, error) { return 1, nil }),
+		future.Promise(ctx, func(ctx context.Context) (int8, error) { return 1, nil }),
+		future.Promise(ctx, func(ctx context.Context) (uint8, error) { return 1, nil }),
+		future.Promise(ctx, func(ctx context.Context) (int16, error) { return 1, nil }),
+		future.Promise(ctx, func(ctx context.Context) (uint16, error) { return 1, nil }),
+		future.Promise(ctx, func(ctx context.Context) (int32, error) { return 1, nil }),
+		future.Promise(ctx, func(ctx context.Context) (uint32, error) { return 1, nil }),
 	)
 
 	assert.NoError(t, err)
@@ -28,6 +28,23 @@ func TestFutureTyped(t *testing.T) {
 	assert.Equal(t, uint16(1), d)
 	assert.Equal(t, int32(1), e)
 	assert.Equal(t, uint32(1), f)
+
+	x, err := future.ResolveN(
+		future.Promise(ctx, func(context.Context) (int, error) { return 1, nil }),
+		future.Promise(ctx, func(context.Context) (int, error) { return 2, nil }),
+		future.Promise(ctx, func(context.Context) (int, error) { return 3, nil }),
+		future.Promise(ctx, func(context.Context) (int, error) { return 4, nil }),
+		future.Promise(ctx, func(context.Context) (int, error) { return 5, nil }),
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, []int{1, 2, 3, 4, 5}, x)
+
+	x, err = future.ResolveN(
+		future.Promise(ctx, func(context.Context) (int, error) { return 1, nil }),
+		future.Promise(ctx, func(context.Context) (int, error) { return 2, errors.New("err") }),
+	)
+	assert.Error(t, err)
+	assert.Nil(t, x)
 }
 
 func TestFutureErrors(t *testing.T) {
@@ -48,12 +65,12 @@ func TestFutureErrors(t *testing.T) {
 	}
 	for _, tc := range cases {
 		a, b, c, d, e, f, err := future.Resolve6(
-			future.Await(ctx, func(ctx context.Context) (int, error) { return tc.a, tc.errA }),
-			future.Await(ctx, func(ctx context.Context) (int, error) { return tc.b, tc.errB }),
-			future.Await(ctx, func(ctx context.Context) (int, error) { return tc.c, tc.errC }),
-			future.Await(ctx, func(ctx context.Context) (int, error) { return tc.d, tc.errD }),
-			future.Await(ctx, func(ctx context.Context) (int, error) { return tc.e, tc.errE }),
-			future.Await(ctx, func(ctx context.Context) (int, error) { return tc.f, tc.errF }),
+			future.Promise(ctx, func(ctx context.Context) (int, error) { return tc.a, tc.errA }),
+			future.Promise(ctx, func(ctx context.Context) (int, error) { return tc.b, tc.errB }),
+			future.Promise(ctx, func(ctx context.Context) (int, error) { return tc.c, tc.errC }),
+			future.Promise(ctx, func(ctx context.Context) (int, error) { return tc.d, tc.errD }),
+			future.Promise(ctx, func(ctx context.Context) (int, error) { return tc.e, tc.errE }),
+			future.Promise(ctx, func(ctx context.Context) (int, error) { return tc.f, tc.errF }),
 		)
 
 		assert.ErrorIs(t, err, errTest)
@@ -66,11 +83,11 @@ func TestFutureErrors(t *testing.T) {
 	}
 }
 
-func TestAwaitCancelled(t *testing.T) {
+func TestPromiseCancelled(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	cancel()
 
-	_, err := future.Await(ctx, func(ctx context.Context) (int, error) { return 0, nil })()
+	_, err := future.Promise(ctx, func(ctx context.Context) (int, error) { return 0, nil })()
 	assert.ErrorIs(t, err, context.Canceled)
 }

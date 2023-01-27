@@ -39,13 +39,13 @@ func main() {
 
 	start := time.Now()
 	de, en, fr, err := future.Resolve3(
-		future.Await(ctx, func(ctx context.Context) (string, error) {
+		future.Promise(ctx, func(ctx context.Context) (string, error) {
 			return fetch(ctx, "https://de.wikipedia.org/wiki/Go_(Programmiersprache)")
 		}),
-		future.Await(ctx, func(ctx context.Context) (string, error) {
+		future.Promise(ctx, func(ctx context.Context) (string, error) {
 			return fetch(ctx, "https://en.wikipedia.org/wiki/Go_(programming_language)")
 		}),
-		future.Await(ctx, func(ctx context.Context) (string, error) {
+		future.Promise(ctx, func(ctx context.Context) (string, error) {
 			return fetch(ctx, "https://fr.wikipedia.org/wiki/Go_(langage)")
 		}),
 	)

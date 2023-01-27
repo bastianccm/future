@@ -2,7 +2,7 @@ package future
 
 import "context"
 
-func Await[T any](ctx context.Context, future func(ctx context.Context) (T, error)) func() (T, error) {
+func Promise[T any](ctx context.Context, future func(ctx context.Context) (T, error)) func() (T, error) {
 	valC := make(chan T)
 	errC := make(chan error)
 
@@ -25,6 +25,18 @@ func Await[T any](ctx context.Context, future func(ctx context.Context) (T, erro
 			return *new(T), ctx.Err()
 		}
 	}
+}
+
+func ResolveN[T any](cbs ...func() (T, error)) ([]T, error) {
+	res := make([]T, len(cbs))
+	var err error
+	for i, cb := range cbs {
+		res[i], err = cb()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func Resolve1[T any](cb1 func() (T, error)) (T, error) {
